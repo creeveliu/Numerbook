@@ -241,6 +241,7 @@ numerbook-calculator/
 1. ⬜ 保存/加载脚本（LocalStorage）
 2. ⬜ 添加数学函数
 3. ⬜ 更多快捷键支持
+4. ⬜ 部署到国内平台（Gitee Pages / Cloudflare Pages）- 国内访问优化
 
 ---
 
