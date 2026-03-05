@@ -263,30 +263,32 @@
 
         test('语法分析器 (Parser)', '加法表达式', () => {
             const ast = Calculator.parse('1 + 2');
-            return ast.type === 'Binary' && ast.operator === '+';
+            return assertEqual(ast.type === 'Binary' && ast.operator === '+', true);
         });
 
         test('语法分析器 (Parser)', '乘法优先级高于加法', () => {
             const ast = Calculator.parse('1 + 2 * 3');
             // 应该是 1 + (2 * 3), 而不是 (1 + 2) * 3
-            return ast.type === 'Binary' && ast.operator === '+' &&
+            const pass = ast.type === 'Binary' && ast.operator === '+' &&
                    ast.right.type === 'Binary' && ast.right.operator === '*';
+            return assertEqual(pass, true);
         });
 
         test('语法分析器 (Parser)', '括号改变优先级', () => {
             const ast = Calculator.parse('(1 + 2) * 3');
-            return ast.type === 'Binary' && ast.operator === '*' &&
+            const pass = ast.type === 'Binary' && ast.operator === '*' &&
                    ast.left.type === 'Binary' && ast.left.operator === '+';
+            return assertEqual(pass, true);
         });
 
         test('语法分析器 (Parser)', '一元负号', () => {
             const ast = Calculator.parse('-5');
-            return ast.type === 'Unary' && ast.operator === '-';
+            return assertEqual(ast.type === 'Unary' && ast.operator === '-', true);
         });
 
         test('语法分析器 (Parser)', '赋值语句', () => {
             const ast = Calculator.parse('c = a + b');
-            return ast.type === 'Assignment' && ast.name === 'c';
+            return assertEqual(ast.type === 'Assignment' && ast.name === 'c', true);
         });
 
         // 求值器测试
@@ -349,13 +351,13 @@
         test('求值器 (Evaluator)', '未定义变量错误', () => {
             Calculator.reset();
             const result = Calculator.evaluate('x + 1');
-            return result.success === false && result.error.includes('未定义');
+            return assertEqual(result.success === false && result.error.includes('未定义'), true);
         });
 
         test('求值器 (Evaluator)', '除零错误', () => {
             Calculator.reset();
             const result = Calculator.evaluate('10 / 0');
-            return result.success === false && result.error.includes('零');
+            return assertEqual(result.success === false && result.error.includes('零'), true);
         });
 
         test('求值器 (Evaluator)', '小数计算', () => {
