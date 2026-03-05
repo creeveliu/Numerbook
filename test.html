@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numerbook Calculator - Tests</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        h1 { color: #00d9ff; }
+        .test-suite {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-suite h2 {
+            color: #ff6b6b;
+            margin-top: 0;
+        }
+        .test {
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test.pass { background: #0d4132; border-left: 4px solid #00c853; }
+        .test.fail { background: #410d0d; border-left: 4px solid #ff1744; }
+        .test-name { flex: 1; }
+        .test-result {
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+        .test.pass .test-result { background: #00c853; color: #000; }
+        .test.fail .test-result { background: #ff1744; color: #fff; }
+        .test-error {
+            font-size: 12px;
+            color: #ff8a80;
+            margin-top: 4px;
+        }
+        #summary {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #16213e;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #00d9ff;
+        }
+        #summary.pass { border-color: #00c853; }
+        #summary.fail { border-color: #ff1744; }
+        .run-btn {
+            background: #00d9ff;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .run-btn:hover { background: #00b8d4; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Numerbook Calculator - 测试套件</h1>
+    <button class="run-btn" onclick="runAllTests()">▶ 运行所有测试</button>
+
+    <div id="summary">
+        <div>总计：<span id="total">0</span></div>
+        <div>通过：<span id="passed" style="color: #00c853">0</span></div>
+        <div>失败：<span id="failed" style="color: #ff1744">0</span></div>
+    </div>
+
+    <div id="test-results"></div>
+
+    <!-- 引入计算器代码 -->
+    <script src="calculator.js"></script>
+
+    <script>
+        // 测试框架
+        const results = [];
+
+        function assertEqual(actual, expected, message) {
+            if (JSON.stringify(actual) === JSON.stringify(expected)) {
+                return { pass: true };
+            }
+            return {
+                pass: false,
+                error: `期望：${JSON.stringify(expected)}, 实际：${JSON.stringify(actual)}`
+            };
+        }
+
+        function assertThrows(fn, message) {
+            try {
+                fn();
+                return { pass: false, error: '未抛出错误' };
+            } catch (e) {
+                return { pass: true };
+            }
+        }
+
+        function test(suite, name, fn) {
+            results.push({ suite, name, fn });
+        }
+
+        function renderResults() {
+            const container = document.getElementById('test-results');
+            const grouped = {};
+
+            results.forEach(r => {
+                if (!grouped[r.suite]) grouped[r.suite] = [];
+                grouped[r.suite].push(r);
+            });
+
+            container.innerHTML = Object.entries(grouped).map(([suite, tests]) => `
+                <div class="test-suite">
+                    <h2>${suite}</h2>
+                    ${tests.map((t, i) => `
+                        <div class="test ${t.status === 'pass' ? 'pass' : 'fail'}" id="test-${suite}-${i}">
+                            <div>
+                                <div class="test-name">${t.name}</div>
+                                ${t.error ? `<div class="test-error">${t.error}</div>` : ''}
+                            </div>
+                            <div class="test-result">${t.status === 'pass' ? '✓ PASS' : '✗ FAIL'}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        function runAllTests() {
+            let passed = 0, failed = 0;
+
+            results.forEach(r => {
+                try {
+                    const result = r.fn();
+                    r.status = result.pass ? 'pass' : 'fail';
+                    r.error = result.error;
+                    if (result.pass) passed++;
+                    else failed++;
+                } catch (e) {
+                    r.status = 'fail';
+                    r.error = e.message;
+                    failed++;
+                }
+            });
+
+            document.getElementById('total').textContent = results.length;
+            document.getElementById('passed').textContent = passed;
+            document.getElementById('failed').textContent = failed;
+
+            const summary = document.getElementById('summary');
+            summary.className = failed === 0 && results.length > 0 ? 'pass' : 'fail';
+
+            renderResults();
+        }
+
+        // ============ 测试用例 ============
+
+        // 词法分析器测试
+        test('词法分析器 (Tokenizer)', '数字解析：整数', () => {
+            const tokens = Calculator.tokenize('123');
+            return assertEqual(tokens, [{type: 'NUMBER', value: 123}]);
+        });
+
+        test('词法分析器 (Tokenizer)', '数字解析：小数', () => {
+            const tokens = Calculator.tokenize('3.14');
+            return assertEqual(tokens, [{type: 'NUMBER', value: 3.14}]);
+        });
+
+        test('词法分析器 (Tokenizer)', '标识符解析：简单变量', () => {
+            const tokens = Calculator.tokenize('abc');
+            return assertEqual(tokens, [{type: 'IDENTIFIER', value: 'abc'}]);
+        });
+
+        test('词法分析器 (Tokenizer)', '标识符解析：带下划线', () => {
+            const tokens = Calculator.tokenize('abc_def');
+            return assertEqual(tokens, [{type: 'IDENTIFIER', value: 'abc_def'}]);
+        });
+
+        test('词法分析器 (Tokenizer)', '运算符解析：加法', () => {
+            const tokens = Calculator.tokenize('+');
+            return assertEqual(tokens, [{type: 'PLUS', value: '+'}]);
+        });
+
+        test('词法分析器 (Tokenizer)', '运算符解析：减法', () => {
+            const tokens = Calculator.tokenize('-');
+            return assertEqual(tokens, [{type: 'MINUS', value: '-'}]);
+        });
+
+        test('词法分析器 (Tokenizer)', '运算符解析：乘法', () => {
+            const tokens = Calculator.tokenize('*');
+            return assertEqual(tokens, [{type: 'STAR', value: '*'}]);
+        });
+
+        test('词法分析器 (Tokenizer)', '运算符解析：除法', () => {
+            const tokens = Calculator.tokenize('/');
+            return assertEqual(tokens, [{type: 'SLASH', value: '/'}]);
+        });
+
+        test('词法分析器 (Tokenizer)', '等号解析', () => {
+            const tokens = Calculator.tokenize('=');
+            return assertEqual(tokens, [{type: 'EQUAL', value: '='}]);
+        });
+
+        test('词法分析器 (Tokenizer)', '括号解析', () => {
+            const tokens = Calculator.tokenize('( )');
+            return assertEqual(tokens, [{type: 'LPAREN', value: '('}, {type: 'RPAREN', value: ')'}]);
+        });
+
+        test('词法分析器 (Tokenizer)', '复杂表达式解析', () => {
+            const tokens = Calculator.tokenize('a + 10 * 2');
+            return assertEqual(tokens, [
+                {type: 'IDENTIFIER', value: 'a'},
+                {type: 'PLUS', value: '+'},
+                {type: 'NUMBER', value: 10},
+                {type: 'STAR', value: '*'},
+                {type: 'NUMBER', value: 2}
+            ]);
+        });
+
+        test('词法分析器 (Tokenizer)', '赋值语句解析', () => {
+            const tokens = Calculator.tokenize('c = a + b');
+            return assertEqual(tokens, [
+                {type: 'IDENTIFIER', value: 'c'},
+                {type: 'EQUAL', value: '='},
+                {type: 'IDENTIFIER', value: 'a'},
+                {type: 'PLUS', value: '+'},
+                {type: 'IDENTIFIER', value: 'b'}
+            ]);
+        });
+
+        test('词法分析器 (Tokenizer)', '空白字符处理', () => {
+            const tokens = Calculator.tokenize('  a   +   b  ');
+            return assertEqual(tokens, [
+                {type: 'IDENTIFIER', value: 'a'},
+                {type: 'PLUS', value: '+'},
+                {type: 'IDENTIFIER', value: 'b'}
+            ]);
+        });
+
+        // 语法分析器测试
+        test('语法分析器 (Parser)', '数字表达式', () => {
+            const ast = Calculator.parse('10');
+            return assertEqual(ast, {type: 'Number', value: 10});
+        });
+
+        test('语法分析器 (Parser)', '变量表达式', () => {
+            const ast = Calculator.parse('abc');
+            return assertEqual(ast, {type: 'Identifier', name: 'abc'});
+        });
+
+        test('语法分析器 (Parser)', '加法表达式', () => {
+            const ast = Calculator.parse('1 + 2');
+            return ast.type === 'Binary' && ast.operator === '+';
+        });
+
+        test('语法分析器 (Parser)', '乘法优先级高于加法', () => {
+            const ast = Calculator.parse('1 + 2 * 3');
+            // 应该是 1 + (2 * 3), 而不是 (1 + 2) * 3
+            return ast.type === 'Binary' && ast.operator === '+' &&
+                   ast.right.type === 'Binary' && ast.right.operator === '*';
+        });
+
+        test('语法分析器 (Parser)', '括号改变优先级', () => {
+            const ast = Calculator.parse('(1 + 2) * 3');
+            return ast.type === 'Binary' && ast.operator === '*' &&
+                   ast.left.type === 'Binary' && ast.left.operator === '+';
+        });
+
+        test('语法分析器 (Parser)', '一元负号', () => {
+            const ast = Calculator.parse('-5');
+            return ast.type === 'Unary' && ast.operator === '-';
+        });
+
+        test('语法分析器 (Parser)', '赋值语句', () => {
+            const ast = Calculator.parse('c = a + b');
+            return ast.type === 'Assignment' && ast.name === 'c';
+        });
+
+        // 求值器测试
+        test('求值器 (Evaluator)', '数字求值', () => {
+            const result = Calculator.evaluate('10');
+            return assertEqual(result, {success: true, value: 10});
+        });
+
+        test('求值器 (Evaluator)', '加法求值', () => {
+            const result = Calculator.evaluate('10 + 20');
+            return assertEqual(result, {success: true, value: 30});
+        });
+
+        test('求值器 (Evaluator)', '减法求值', () => {
+            const result = Calculator.evaluate('20 - 10');
+            return assertEqual(result, {success: true, value: 10});
+        });
+
+        test('求值器 (Evaluator)', '乘法求值', () => {
+            const result = Calculator.evaluate('6 * 7');
+            return assertEqual(result, {success: true, value: 42});
+        });
+
+        test('求值器 (Evaluator)', '除法求值', () => {
+            const result = Calculator.evaluate('100 / 4');
+            return assertEqual(result, {success: true, value: 25});
+        });
+
+        test('求值器 (Evaluator)', '优先级求值', () => {
+            const result = Calculator.evaluate('1 + 2 * 3');
+            return assertEqual(result, {success: true, value: 7});
+        });
+
+        test('求值器 (Evaluator)', '括号求值', () => {
+            const result = Calculator.evaluate('(1 + 2) * 3');
+            return assertEqual(result, {success: true, value: 9});
+        });
+
+        test('求值器 (Evaluator)', '一元负号求值', () => {
+            const result = Calculator.evaluate('-5');
+            return assertEqual(result, {success: true, value: -5});
+        });
+
+        test('求值器 (Evaluator)', '变量赋值', () => {
+            Calculator.reset();
+            const result1 = Calculator.evaluate('a = 10');
+            const result2 = Calculator.evaluate('a');
+            return assertEqual(result1, {success: true, value: 10}) &&
+                   assertEqual(result2, {success: true, value: 10});
+        });
+
+        test('求值器 (Evaluator)', '变量引用', () => {
+            Calculator.reset();
+            Calculator.evaluate('a = 10');
+            Calculator.evaluate('b = 20');
+            const result = Calculator.evaluate('c = a + b');
+            return assertEqual(result, {success: true, value: 30});
+        });
+
+        test('求值器 (Evaluator)', '未定义变量错误', () => {
+            Calculator.reset();
+            const result = Calculator.evaluate('x + 1');
+            return result.success === false && result.error.includes('未定义');
+        });
+
+        test('求值器 (Evaluator)', '除零错误', () => {
+            Calculator.reset();
+            const result = Calculator.evaluate('10 / 0');
+            return result.success === false && result.error.includes('零');
+        });
+
+        test('求值器 (Evaluator)', '小数计算', () => {
+            const result = Calculator.evaluate('3.14 * 2');
+            return assertEqual(result, {success: true, value: 6.28});
+        });
+
+        test('求值器 (Evaluator)', '复杂表达式', () => {
+            Calculator.reset();
+            Calculator.evaluate('单价 = 99');
+            Calculator.evaluate('数量 = 5');
+            const result = Calculator.evaluate('总计 = 单价 * 数量 + 10');
+            return assertEqual(result, {success: true, value: 505});
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numerbook Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 主色调 - 精致灰度 */
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f5f5f5;
+
+            /* 文字颜色 */
+            --text-primary: #1a1a1a;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+
+            /* 强调色 - 精致的蓝绿色 */
+            --accent-primary: #0891b2;
+            --accent-hover: #0e7490;
+            --accent-subtle: rgba(8, 145, 178, 0.08);
+
+            /* 语义色 */
+            --success: #059669;
+            --success-bg: rgba(5, 150, 105, 0.08);
+            --error: #dc2626;
+            --error-bg: rgba(220, 38, 38, 0.06);
+
+            /* 边框 */
+            --border-light: #e5e7eb;
+            --border-medium: #d1d5db;
+
+            /* 阴影 */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+            /* 圆角 */
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+
+            /* 间距 */
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 头部 - 极简设计 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm) var(--spacing-lg);
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-primary), #22d3ee);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .brand h1 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .brand-subtitle {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-left: 8px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0.7;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* 主容器 */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: var(--spacing-lg);
+            gap: var(--spacing-lg);
+            max-width: 840px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* 编辑器卡片 */
+        .editor-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .editor-title {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .editor-status {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .editor {
+            min-height: 420px;
+            padding: var(--spacing-md);
+        }
+
+        /* 行样式 */
+        .line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 40px;
+            margin: 2px 0;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            transition: background 0.15s ease;
+        }
+
+        .line:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .line.focused {
+            background: var(--accent-subtle);
+        }
+
+        .line-input-wrapper {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            min-width: 0;
+            gap: var(--spacing-xs);
+        }
+
+        .line-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            width: 24px;
+            text-align: right;
+            user-select: none;
+        }
+
+        .line-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            padding: 8px 10px;
+            width: 100%;
+        }
+
+        .line-input:focus {
+            outline: none;
+        }
+
+        .line-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .line-result {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .line-result.success {
+            color: var(--success);
+            background: var(--success-bg);
+        }
+
+        .line-result.error {
+            color: var(--error);
+            background: var(--error-bg);
+            font-size: 12px;
+        }
+
+        .result-arrow {
+            color: var(--text-tertiary);
+            font-weight: 400;
+        }
+
+        .result-value {
+            letter-spacing: -0.02em;
+        }
+
+        /* 变量面板 */
+        .variables-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-light);
+            padding: var(--spacing-md);
+        }
+
+        .variables-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .variables-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .variables-count {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            background: var(--bg-tertiary);
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+
+        .variables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 8px;
+        }
+
+        .variable-chip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+            transition: all 0.15s ease;
+        }
+
+        .variable-chip:hover {
+            border-color: var(--border-medium);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .variable-chip-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--accent-primary);
+            font-weight: 500;
+        }
+
+        .variable-chip-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .variables-empty {
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+
+        /* 提示信息 */
+        .hint {
+            text-align: center;
+            padding: var(--spacing-md);
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            border: 1px dashed var(--border-light);
+        }
+
+        .hint code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--accent-primary);
+            font-size: 11px;
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-medium);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-tertiary);
+        }
+
+        /* 响应式 */
+        @media (max-width: 640px) {
+            .container {
+                padding: var(--spacing-sm);
+            }
+
+            .brand-subtitle {
+                display: none;
+            }
+
+            .variables-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="brand">
+            <div class="brand-icon">N</div>
+            <h1>Numerbook</h1>
+            <span class="brand-subtitle">Calculator</span>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="editor-card">
+            <div class="editor-header">
+                <span class="editor-title">计算编辑器</span>
+                <span class="editor-status">
+                    <span class="status-dot"></span>
+                    实时计算
+                </span>
+            </div>
+            <div class="editor" id="editor"></div>
+        </div>
+
+        <div class="variables-card">
+            <div class="variables-header">
+                <span class="variables-title">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+                    </svg>
+                    变量
+                </span>
+                <span class="variables-count" id="variable-count">0 个</span>
+            </div>
+            <div class="variables-grid" id="variables-list">
+                <div class="variables-empty">暂无变量，输入赋值表达式创建变量</div>
+            </div>
+        </div>
+
+        <div class="hint">
+            支持 <code>a = 10</code> 赋值 · <code>c = a + b</code> 引用 · <code>10 + 20</code> 直接计算
+        </div>
+    </main>
+
+    <script src="calculator.js"></script>
+    <script>
+        const app = (function() {
+            const editor = document.getElementById('editor');
+            const variablesList = document.getElementById('variables-list');
+            const variableCount = document.getElementById('variable-count');
+
+            let lines = [];
+            let focusedIndex = 0;
+
+            function init() {
+                lines = [];
+                addLine();
+                render();
+            }
+
+            function addLine(input = '') {
+                lines.push({ input: input, result: null });
+            }
+
+            function removeLine(index) {
+                if (lines.length > 1) {
+                    lines.splice(index, 1);
+                }
+            }
+
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            function formatNumber(num) {
+                if (typeof num !== 'number') return num;
+                return parseFloat(num.toFixed(10)).toString();
+            }
+
+            function renderResult(result) {
+                if (!result || result.isEmpty) {
+                    return '<div class="line-result"></div>';
+                }
+
+                if (result.success) {
+                    const value = formatNumber(result.value);
+                    return `
+                        <div class="line-result success">
+                            <span class="result-arrow">→</span>
+                            <span class="result-value">${value}</span>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="line-result error">
+                            <span class="result-value">${escapeHtml(result.error)}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            function render() {
+                const focusedElement = document.activeElement;
+                const wasFocused = focusedElement?.classList.contains('line-input');
+
+                editor.innerHTML = lines.map((line, index) => `
+                    <div class="line ${index === focusedIndex ? 'focused' : ''}" data-index="${index}">
+                        <div class="line-input-wrapper">
+                            <span class="line-number">${index + 1}</span>
+                            <input class="line-input"
+                                   type="text"
+                                   value="${escapeHtml(line.input)}"
+                                   data-index="${index}"
+                                   oninput="app.handleLineInput(${index}, this.value)"
+                                   onkeydown="app.handleLineKeydown(event, ${index})"
+                                   onfocus="focusedIndex = ${index}"
+                                   placeholder="输入表达式...">
+                        </div>
+                        ${renderResult(line.result)}
+                    </div>
+                `).join('');
+
+                if (wasFocused || true) {
+                    focusLine(focusedIndex);
+                }
+
+                updateVariablesPanel();
+            }
+
+            function updateVariablesPanel() {
+                const variables = Calculator.getVariables();
+                const entries = Object.entries(variables);
+
+                variableCount.textContent = `${entries.length} 个`;
+
+                if (entries.length === 0) {
+                    variablesList.innerHTML = '<div class="variables-empty">暂无变量，输入赋值表达式创建变量</div>';
+                } else {
+                    variablesList.innerHTML = entries.map(([name, value]) => `
+                        <div class="variable-chip">
+                            <span class="variable-chip-name">${escapeHtml(name)}</span>
+                            <span class="variable-chip-value">${formatNumber(value)}</span>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            function recalculateAll() {
+                Calculator.reset();
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].input.trim()) {
+                        lines[i].result = Calculator.evaluate(lines[i].input);
+                    }
+                }
+                render();
+            }
+
+            function handleLineInput(index, value) {
+                lines[index].input = value;
+                const result = Calculator.evaluate(value);
+                lines[index].result = result;
+
+                if (result.success && value.includes('=')) {
+                    recalculateAll();
+                } else {
+                    updateLineResult(index, result);
+                }
+            }
+
+            function updateLineResult(index, result) {
+                const lineEl = editor.querySelector(`.line[data-index="${index}"]`);
+                if (lineEl) {
+                    const resultEl = lineEl.querySelector('.line-result');
+                    if (resultEl) {
+                        const resultHtml = renderResult(result).trim();
+                        resultEl.outerHTML = resultHtml;
+
+                        // 添加动画
+                        const newResult = resultEl.parentElement.querySelector('.line-result');
+                        if (newResult) {
+                            newResult.style.animation = 'none';
+                            newResult.offsetHeight; // 触发重绘
+                            newResult.style.animation = 'fadeIn 0.2s ease';
+                        }
+                    }
+                }
+                updateVariablesPanel();
+            }
+
+            function handleLineKeydown(e, index) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    focusedIndex = index + 1;
+                    if (focusedIndex >= lines.length) {
+                        addLine();
+                        render();
+                    } else {
+                        render();
+                    }
+                } else if (e.key === 'Backspace' && lines[index].input === '') {
+                    if (lines.length > 1) {
+                        e.preventDefault();
+                        removeLine(index);
+                        focusedIndex = Math.max(0, index - 1);
+                        render();
+                    }
+                } else if (e.key === 'ArrowUp' && index > 0) {
+                    e.preventDefault();
+                    focusedIndex = index - 1;
+                    render();
+                } else if (e.key === 'ArrowDown' && index < lines.length - 1) {
+                    e.preventDefault();
+                    focusedIndex = index + 1;
+                    render();
+                }
+            }
+
+            function focusLine(index) {
+                const input = editor.querySelector(`.line-input[data-index="${index}"]`);
+                if (input) {
+                    input.focus();
+                    requestAnimationFrame(() => {
+                        input.setSelectionRange(input.value.length, input.value.length);
+                    });
+                }
+            }
+
+            return {
+                init,
+                handleLineInput,
+                handleLineKeydown
+            };
+        })();
+
+        document.addEventListener('DOMContentLoaded', app.init);
+    </script>
+
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</body>
+</html>
