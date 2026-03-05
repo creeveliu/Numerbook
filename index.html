@@ -119,6 +119,103 @@
             gap: var(--spacing-xs);
         }
 
+        /* 示例按钮和面板 */
+        .templates-btn {
+            position: relative;
+        }
+
+        .templates-panel {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-light);
+            min-width: 280px;
+            max-width: 320px;
+            z-index: 1000;
+            display: none;
+            animation: slideDown 0.2s ease;
+        }
+
+        .templates-panel.show {
+            display: block;
+        }
+
+        .templates-list {
+            padding: var(--spacing-sm);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .template-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+        }
+
+        .template-item:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--border-light);
+            transform: translateX(2px);
+        }
+
+        .template-icon {
+            font-size: 20px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .template-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .template-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .template-desc {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .template-preview {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .btn {
             padding: 8px 14px;
             border: none;
@@ -456,9 +553,22 @@
             <h1>Numerbook</h1>
             <span class="brand-subtitle">Calculator</span>
         </div>
+        <div class="header-actions">
+            <div class="templates-btn" id="templates-btn-container">
+                <button class="btn btn-secondary" id="templates-btn">
+                    <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    示例
+                </button>
+                <!-- 示例面板 -->
+                <div class="templates-panel" id="templates-panel">
+                    <div class="templates-list" id="templates-list"></div>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <main class="container">
         <div class="editor-card">
             <div class="editor-header">
                 <span class="editor-title">计算编辑器</span>
@@ -492,18 +602,149 @@
 
     <script src="calculator.js"></script>
     <script>
-        const app = (function() {
-            const editor = document.getElementById('editor');
-            const variablesList = document.getElementById('variables-list');
-            const variableCount = document.getElementById('variable-count');
+        // 示例公式数据
+        const formulaTemplates = [
+            {
+                id: 'bmi',
+                name: 'BMI 计算',
+                icon: '📊',
+                description: '身体质量指数',
+                lines: [
+                    '体重 = 70',
+                    '身高 = 1.75',
+                    'BMI = 体重 / (身高 * 身高)'
+                ]
+            },
+            {
+                id: 'mortgage',
+                name: '房贷计算',
+                icon: '🏠',
+                description: '等额本息月供',
+                lines: [
+                    '贷款 = 1000000',
+                    '利率 = 0.04',
+                    '年数 = 30',
+                    '月供 = 贷款 * 利率 / 12 * (1 + 利率 / 12) ^ (年数 * 12) / ((1 + 利率 / 12) ^ (年数 * 12) - 1)'
+                ]
+            },
+            {
+                id: 'discount',
+                name: '折扣计算',
+                icon: '🏷️',
+                description: '商品打折',
+                lines: [
+                    '原价 = 100',
+                    '折扣 = 0.8',
+                    '折后价 = 原价 * 折扣'
+                ]
+            },
+            {
+                id: 'tip',
+                name: '小费计算',
+                icon: '💵',
+                description: '餐厅小费',
+                lines: [
+                    '账单 = 200',
+                    '小费比例 = 0.15',
+                    '小费 = 账单 * 小费比例',
+                    '总计 = 账单 + 小费'
+                ]
+            },
+            {
+                id: 'temperature',
+                name: '温度转换',
+                icon: '🌡️',
+                description: '摄氏度转华氏度',
+                lines: [
+                    '摄氏 = 25',
+                    '华氏 = 摄氏 * 9 / 5 + 32'
+                ]
+            },
+            {
+                id: 'percentage',
+                name: '百分比计算',
+                icon: '💯',
+                description: '求百分比',
+                lines: [
+                    '总数 = 500',
+                    '部分 = 75',
+                    '百分比 = (部分 / 总数) * 100'
+                ]
+            },
+            {
+                id: 'speed',
+                name: '速度计算',
+                icon: '🚗',
+                description: '平均速度',
+                lines: [
+                    '距离 = 150',
+                    '时间 = 2.5',
+                    '速度 = 距离 / 时间'
+                ]
+            },
+            {
+                id: 'compound',
+                name: '复利计算',
+                icon: '📈',
+                description: '复利终值',
+                lines: [
+                    '本金 = 10000',
+                    '年利率 = 0.05',
+                    '年数 = 10',
+                    '本息合计 = 本金 * (1 + 年利率) ^ 年数'
+                ]
+            }
+        ];
 
+        const app = (function() {
+            let editor, variablesList, variableCount, templatesPanel, templatesList;
             let lines = [];
             let focusedIndex = 0;
 
             function init() {
+                // 在 init 中获取 DOM 元素，确保 DOM 已加载
+                editor = document.getElementById('editor');
+                variablesList = document.getElementById('variables-list');
+                variableCount = document.getElementById('variable-count');
+                templatesPanel = document.getElementById('templates-panel');
+                templatesList = document.getElementById('templates-list');
+
+                renderTemplates();
+
+                // 添加模板按钮点击事件
+                const templatesBtn = document.getElementById('templates-btn');
+                if (templatesBtn) {
+                    templatesBtn.addEventListener('click', toggleTemplatesPanel);
+                }
+
+                // 初始化时填入一个简单的示例
                 lines = [];
-                addLine();
-                render();
+                addLine('原价 = 100');
+                addLine('折扣 = 0.8');
+                addLine('折后价 = 原价 * 折扣');
+                addLine('');
+                recalculateAll();
+            }
+
+            function renderTemplates() {
+                templatesList.innerHTML = formulaTemplates.map((template, index) => `
+                    <div class="template-item" data-template-id="${template.id}">
+                        <span class="template-icon">${template.icon}</span>
+                        <div class="template-info">
+                            <div class="template-name">${template.name}</div>
+                            <div class="template-desc">${template.description}</div>
+                            <div class="template-preview">${template.lines[0]}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // 为每个模板项添加点击事件
+                const templateItems = templatesList.querySelectorAll('.template-item');
+                templateItems.forEach((item, index) => {
+                    item.addEventListener('click', () => {
+                        loadTemplate(formulaTemplates[index].id);
+                    });
+                });
             }
 
             function addLine(input = '') {
@@ -527,7 +768,7 @@
 
             function formatNumber(num) {
                 if (typeof num !== 'number') return num;
-                return parseFloat(num.toFixed(10)).toString();
+                return parseFloat(num.toFixed(4)).toString();
             }
 
             function renderResult(result) {
@@ -678,14 +919,59 @@
                 }
             }
 
+            function toggleTemplatesPanel() {
+                templatesPanel.classList.toggle('show');
+            }
+
+            function loadTemplate(templateId) {
+                const template = formulaTemplates.find(t => t.id === templateId);
+                if (!template) return;
+
+                // 清空计算器状态
+                Calculator.reset();
+
+                // 清空现有行
+                lines = [];
+
+                // 加载模板公式
+                for (const line of template.lines) {
+                    addLine(line);
+                }
+
+                // 添加一个空行用于继续输入
+                addLine('');
+
+                // 重新计算
+                recalculateAll();
+
+                // 关闭面板
+                templatesPanel.classList.remove('show');
+
+                // 聚焦到第一个空行
+                focusedIndex = lines.length - 1;
+                render();
+            }
+
+            // 点击外部关闭模板面板
+            function handleClickOutside(event) {
+                const container = document.getElementById('templates-btn-container');
+                if (container && !container.contains(event.target)) {
+                    templatesPanel.classList.remove('show');
+                }
+            }
+
             return {
                 init,
                 handleLineInput,
-                handleLineKeydown
+                handleLineKeydown,
+                toggleTemplatesPanel,
+                loadTemplate,
+                handleClickOutside
             };
         })();
 
         document.addEventListener('DOMContentLoaded', app.init);
+        document.addEventListener('click', app.handleClickOutside);
     </script>
 
     <style>

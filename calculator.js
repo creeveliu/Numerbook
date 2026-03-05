@@ -15,6 +15,7 @@ const TokenType = {
     EQUAL: 'EQUAL',
     LPAREN: 'LPAREN',
     RPAREN: 'RPAREN',
+    POW: 'POW',
     EOF: 'EOF'
 };
 
@@ -84,6 +85,7 @@ class Tokenizer {
                 case '=': this.advance(); return new Token(TokenType.EQUAL, '=');
                 case '(': this.advance(); return new Token(TokenType.LPAREN, '(');
                 case ')': this.advance(); return new Token(TokenType.RPAREN, ')');
+                case '^': this.advance(); return new Token(TokenType.POW, '^');
                 default:
                     throw new Error(`未知字符：${this.currentChar}`);
             }
@@ -195,12 +197,25 @@ class Parser {
 
     // term ::= factor (('*' | '/') factor)*
     term() {
-        let node = this.factor();
+        let node = this.exponent();
 
         while (this.match(TokenType.STAR) || this.match(TokenType.SLASH)) {
             const operator = this.currentToken.type === TokenType.STAR ? '*' : '/';
             this.advance();
-            node = new BinaryNode(operator, node, this.factor());
+            node = new BinaryNode(operator, node, this.exponent());
+        }
+
+        return node;
+    }
+
+    // exponent ::= factor ('^' factor)*
+    exponent() {
+        let node = this.factor();
+
+        if (this.match(TokenType.POW)) {
+            this.advance();
+            const right = this.exponent(); // 右结合
+            node = new BinaryNode('^', node, right);
         }
 
         return node;
@@ -316,6 +331,7 @@ class Evaluator {
                             throw new Error('除数不能为零');
                         }
                         return left / right;
+                    case '^': return Math.pow(left, right);
                     default:
                         throw new Error(`未知运算符：${node.operator}`);
                 }
