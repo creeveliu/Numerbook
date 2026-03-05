@@ -800,6 +800,14 @@
             function render() {
                 const focusedElement = document.activeElement;
                 const wasFocused = focusedElement?.classList.contains('line-input');
+                let cursorStart = null;
+                let cursorEnd = null;
+
+                // 保存当前光标位置
+                if (wasFocused && focusedElement) {
+                    cursorStart = focusedElement.selectionStart;
+                    cursorEnd = focusedElement.selectionEnd;
+                }
 
                 editor.innerHTML = lines.map((line, index) => `
                     <div class="line ${index === focusedIndex ? 'focused' : ''}" data-index="${index}">
@@ -818,8 +826,8 @@
                     </div>
                 `).join('');
 
-                if (wasFocused || true) {
-                    focusLine(focusedIndex);
+                if (wasFocused) {
+                    focusLine(focusedIndex, cursorStart, cursorEnd);
                 }
 
                 updateVariablesPanel();
@@ -854,6 +862,9 @@
             }
 
             function handleLineInput(index, value) {
+                // 更新 focusedIndex 为用户当前输入的行，防止 recalculateAll 后光标跳走
+                focusedIndex = index;
+
                 lines[index].input = value;
                 const result = Calculator.evaluate(value);
                 lines[index].result = result;
@@ -874,7 +885,7 @@
                         resultEl.outerHTML = resultHtml;
 
                         // 添加动画
-                        const newResult = resultEl.parentElement.querySelector('.line-result');
+                        const newResult = lineEl.querySelector('.line-result');
                         if (newResult) {
                             newResult.style.animation = 'none';
                             newResult.offsetHeight; // 触发重绘
@@ -913,10 +924,14 @@
                 }
             }
 
-            function focusLine(index) {
+            function focusLine(index, cursorStart, cursorEnd) {
                 const input = editor.querySelector(`.line-input[data-index="${index}"]`);
                 if (input) {
                     input.focus();
+                    // 恢复光标位置
+                    if (cursorStart !== null && cursorEnd !== null) {
+                        input.setSelectionRange(cursorStart, cursorEnd);
+                    }
                 }
             }
 
