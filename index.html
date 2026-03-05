@@ -916,9 +916,6 @@
                 const input = editor.querySelector(`.line-input[data-index="${index}"]`);
                 if (input) {
                     input.focus();
-                    requestAnimationFrame(() => {
-                        input.setSelectionRange(input.value.length, input.value.length);
-                    });
                 }
             }
 
